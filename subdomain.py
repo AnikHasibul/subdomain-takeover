@@ -1,5 +1,6 @@
 import requests
 import sys
+from bs4 import BeautifulSoup
 
 errorTexts = [
     "The specified bucket does not exit ",
@@ -57,34 +58,41 @@ errorTexts = [
        "Unrecognized domain <strong> ",
 ]
 
-def parseResult(target):
+def findSubdomains(url):
+    ## Getting subdomains
     headers = {'user-agent': 'Mozilla/5.0 (Windows NT 6.1; Win64; x64; rv:47.0) Gecko/20100101 Firefox/47.0'}
-    req = requests.get(target, headers=headers)
-    parsetext = req.text
-    for line in errorTexts:
-        if line in parsetext:
-            return True, target
-        else:
-            pass
-
-    return False, "No issue found!"
+    response = requests.get("https://findsubdomains.com/subdomains-of/"+url, headers=headers)
+    responseText = response.text
+    soup = BeautifulSoup(responseText,
+            'html.parser')
+    domainRowElements = soup.findAll("td",
+            {"data-field": "Domain"})
+    subdomains = []
+    for domainLinks in domainRowElements:
+        link = domainLinks.find('a').text
+        subdomains.append(link)
+    
+    ## Attacking subdomains
+    for target in subdomains:
+        try:
+           response = requests.get("http://"+target, headers=headers)
+           response.text
+        except:
+            continue
+        targetSiteResponse = response.text
+        for line in errorTexts:
+            if line in targetSiteResponse:
+                print(target)
+                continue
 
 
 def attack():
-    target = ""
+    url = ""
     if len(sys.argv) < 2:
         print("No target given!")
-        print("USAGE: python subdomain.py https://target.com")
+        print("USAGE: python subdomain.py target.com")
         return
-    target = sys.argv[1]
-    vuln, site = parseResult(target)
-    if vuln:
-        # comment out this line
-        # if you have a list of targets
-        # and you need only vulnerable target names
-        print("YES!")
-        print(site)
-        return
-    print("No issue found!")
+    url = sys.argv[1]
+    findSubdomains(url)
 
 attack()
