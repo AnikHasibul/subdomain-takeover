@@ -69,15 +69,11 @@ def findSubdomains(url):
             {"data-field": "Domain"})
     subdomains = []
     for domainLinks in domainRowElements:
-        link = domainLinks.find('a').text
-        subdomains.append(link)
-    
-    ## Attacking subdomains
-    for target in subdomains:
+        target = domainLinks.find('a').text
         try:
            response = requests.get("http://"+target, headers=headers)
            response.text
-        except:
+        except requests.exceptions.ConnectionError:
             continue
         targetSiteResponse = response.text
         for line in errorTexts:
@@ -95,4 +91,7 @@ def attack():
     url = sys.argv[1]
     findSubdomains(url)
 
-attack()
+try:
+    attack()
+except KeyboardInterrupt:
+   print("Cancelled!") 
