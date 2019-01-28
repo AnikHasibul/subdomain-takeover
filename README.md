@@ -2,4 +2,4 @@
 Python Tools For Checking Subdomain TakeOver Vulnerbility
 
 ## Usage:
-    $ python subdomain.py https://target.com
+    $ python subdomain.py target.com
